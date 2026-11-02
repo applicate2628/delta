@@ -1,8 +1,6 @@
 name: SoftAP regression
 
 on:
-  push:
-    branches: [fix/preserve-softap-configuration]
   workflow_dispatch:
 
 permissions:
@@ -37,6 +35,13 @@ jobs:
         run: ./gradlew --no-daemon :data:testDebugUnitTest --tests '*SoftApConfigurationPreservationTest'
       - name: All unit tests and debug APK
         run: ./gradlew --no-daemon test :app:assembleDebugKeySignedDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: delta-preserve-wifi6-debug-${{ github.sha }}
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
       - name: Test summary
         if: always()
         shell: bash
