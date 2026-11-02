@@ -26,13 +26,17 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - name: Check Kotlin formatting
+        run: |
+          if ! ./gradlew --no-daemon :data:spotlessKotlinCheck; then
+            ./gradlew --no-daemon :data:spotlessKotlinApply
+            git diff -- data/src
+            exit 1
+          fi
       - name: Regression tests
         run: ./gradlew --no-daemon :data:testDebugUnitTest --tests '*SoftApConfigurationPreservationTest'
       - name: All unit tests and debug APK
         run: ./gradlew --no-daemon test :app:assembleDebugKeySignedDebug
-      - name: Check Kotlin formatting
-        if: always()
-        run: ./gradlew --no-daemon :data:spotlessKotlinCheck
       - name: Test summary
         if: always()
         shell: bash

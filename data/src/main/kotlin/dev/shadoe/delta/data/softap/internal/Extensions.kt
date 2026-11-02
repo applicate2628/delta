@@ -83,7 +83,9 @@ internal object Extensions {
       .apply {
         if (ssid != current.ssid) {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            setWifiSsid(ssid?.encodeToByteArray()?.let { WifiSsid.fromBytes(it) })
+            setWifiSsid(
+              ssid?.encodeToByteArray()?.let { WifiSsid.fromBytes(it) }
+            )
           } else {
             @Suppress("DEPRECATION") setSsid(ssid)
           }

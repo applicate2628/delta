@@ -62,7 +62,7 @@ class SoftApConfigurationPreservationTest {
     accepted: Boolean = true,
     valid: Boolean = true,
     edit: (SoftApConfiguration) -> SoftApConfiguration,
-  ): Triple<Boolean, SoftApConfigurationHidden?, SoftApStateStore> {
+  ): Pair<Boolean, SoftApConfigurationHidden?> {
     val wifi = mockk<IWifiManager>()
     val tethering = mockk<ITetheringConnector>(relaxed = true)
     val submitted = slot<NativeConfiguration>()
@@ -88,10 +88,9 @@ class SoftApConfigurationPreservationTest {
       assertEquals(initial, store.config.value)
       verify { tethering wasNot Called }
     }
-    return Triple(
+    return Pair(
       success,
       if (submitted.isCaptured) Refine.unsafeCast(submitted.captured) else null,
-      store,
     )
   }
 
@@ -99,7 +98,8 @@ class SoftApConfigurationPreservationTest {
   fun `hidden only edit preserves the entire remaining native configuration`() =
     runTest {
       val original = nativeConfiguration()
-      val (success, saved) = applyConfiguration(original) { it.copy(isHidden = true) }
+      val (success, saved) =
+        applyConfiguration(original) { it.copy(isHidden = true) }
       assertTrue(success)
       assertEquals(
         SoftApConfigurationHidden.Builder(original).setHiddenSsid(true).build(),
@@ -120,9 +120,10 @@ class SoftApConfigurationPreservationTest {
   fun `explicit band edit is still applied without resetting native flags`() =
     runTest {
       val original = nativeConfiguration()
-      val (success, saved) = applyConfiguration(original) {
-        it.copy(speedType = SoftApSpeedType.BAND_2GHZ)
-      }
+      val (success, saved) =
+        applyConfiguration(original) {
+          it.copy(speedType = SoftApSpeedType.BAND_2GHZ)
+        }
       assertTrue(success)
       assertEquals(
         SoftApConfigurationHidden.Builder(original)
@@ -136,9 +137,10 @@ class SoftApConfigurationPreservationTest {
   fun `changing a password preserves radio and client control settings`() =
     runTest {
       val original = nativeConfiguration()
-      val (success, saved) = applyConfiguration(original) {
-        it.copy(passphrase = "another-test-password")
-      }
+      val (success, saved) =
+        applyConfiguration(original) {
+          it.copy(passphrase = "another-test-password")
+        }
       assertTrue(success)
       assertEquals(
         SoftApConfigurationHidden.Builder(original)
@@ -150,18 +152,20 @@ class SoftApConfigurationPreservationTest {
 
   @Test
   fun `system rejection is not reported as successful saving`() = runTest {
-    val (success, _) = applyConfiguration(nativeConfiguration(), accepted = false) {
-      it.copy(isHidden = true)
-    }
+    val (success, _) =
+      applyConfiguration(nativeConfiguration(), accepted = false) {
+        it.copy(isHidden = true)
+      }
     assertFalse(success)
   }
 
   @Test
   @Config(sdk = [35, 36], manifest = Config.NONE)
   fun `validation failure does not submit a configuration`() = runTest {
-    val (success, saved) = applyConfiguration(nativeConfiguration(), valid = false) {
-      it.copy(isHidden = true)
-    }
+    val (success, saved) =
+      applyConfiguration(nativeConfiguration(), valid = false) {
+        it.copy(isHidden = true)
+      }
     assertFalse(success)
     assertEquals(null, saved)
   }
@@ -178,9 +182,8 @@ class SoftApConfigurationPreservationTest {
           }
         }
         .build()
-    val (success, saved) = applyConfiguration(original) {
-      it.copy(isHidden = true)
-    }
+    val (success, saved) =
+      applyConfiguration(original) { it.copy(isHidden = true) }
     assertTrue(success)
     assertEquals(
       SoftApConfigurationHidden.Builder(original).setHiddenSsid(true).build(),
@@ -195,9 +198,8 @@ class SoftApConfigurationPreservationTest {
         SoftApConfigurationHidden.Builder(nativeConfiguration())
           .setPassphrase(null, 0)
           .build()
-      val (success, saved) = applyConfiguration(original) {
-        it.copy(isHidden = true)
-      }
+      val (success, saved) =
+        applyConfiguration(original) { it.copy(isHidden = true) }
       assertTrue(success)
       assertEquals(
         SoftApConfigurationHidden.Builder(original).setHiddenSsid(true).build(),
