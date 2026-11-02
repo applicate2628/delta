@@ -44,17 +44,23 @@ constructor(
       override fun onResult(resultCode: Int) {}
     }
 
-  private fun setSoftApConfiguration(c: SoftApConfiguration) =
-    Refine.unsafeCast<android.net.wifi.SoftApConfiguration>(c.toOriginalClass())
-      .let {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-          if (!wifiManager.validateSoftApConfiguration(it)) {
-            return@let false
-          }
-        }
-        wifiManager.setSoftApConfiguration(it, ADB_PACKAGE_NAME)
-        return@let true
+  private fun setSoftApConfiguration(c: SoftApConfiguration): Boolean {
+    val original =
+      checkNotNull(wifiManager.softApConfiguration) {
+        "Current hotspot configuration is unavailable"
       }
+    val updated =
+      Refine.unsafeCast<android.net.wifi.SoftApConfiguration>(
+        c.toOriginalClass(Refine.unsafeCast(original))
+      )
+    if (
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        !wifiManager.validateSoftApConfiguration(updated)
+    ) {
+      return false
+    }
+    return wifiManager.setSoftApConfiguration(updated, ADB_PACKAGE_NAME)
+  }
 
   // TODO: remove this workaround during rewrite
   fun startSoftAp(forceStart: Boolean = false): Boolean {

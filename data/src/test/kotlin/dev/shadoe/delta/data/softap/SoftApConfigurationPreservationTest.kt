@@ -8,6 +8,7 @@ import android.net.wifi.SoftApConfigurationHidden
 import android.os.Build
 import dev.rikka.tools.refine.Refine
 import dev.shadoe.delta.api.SoftApConfiguration
+import dev.shadoe.delta.api.SoftApEnabledState
 import dev.shadoe.delta.api.SoftApSpeedType
 import dev.shadoe.delta.data.softap.internal.Extensions.toBridgeClass
 import dev.shadoe.delta.data.softap.internal.InternalState
@@ -20,7 +21,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -53,6 +56,7 @@ class SoftApConfigurationPreservationTest {
       }
       .build()
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   private fun TestScope.applyConfiguration(
     original: SoftApConfigurationHidden,
     accepted: Boolean = true,
@@ -71,9 +75,16 @@ class SoftApConfigurationPreservationTest {
     }
     every { wifi.setSoftApConfiguration(capture(submitted), any()) } returns
       accepted
+    if (!accepted || !valid) {
+      store.mStatus.value =
+        store.status.value.copy(
+          enabledState = SoftApEnabledState.WIFI_AP_STATE_ENABLED
+        )
+    }
     val controller = SoftApController(tethering, wifi, store, backgroundScope)
     val success = controller.updateSoftApConfiguration(edit(initial))
     if (!accepted || !valid) {
+      runCurrent()
       assertEquals(initial, store.config.value)
       verify { tethering wasNot Called }
     }
@@ -154,4 +165,65 @@ class SoftApConfigurationPreservationTest {
     assertFalse(success)
     assertEquals(null, saved)
   }
+
+  @Test
+  @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
+  fun `hidden edit does not force disabled radio generations on`() = runTest {
+    val original =
+      SoftApConfigurationHidden.Builder(nativeConfiguration())
+        .setIeee80211axEnabled(false)
+        .apply {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setIeee80211beEnabled(false)
+          }
+        }
+        .build()
+    val (success, saved) = applyConfiguration(original) {
+      it.copy(isHidden = true)
+    }
+    assertTrue(success)
+    assertEquals(
+      SoftApConfigurationHidden.Builder(original).setHiddenSsid(true).build(),
+      saved,
+    )
+  }
+
+  @Test
+  fun `hidden edit preserves a passwordless network without using fallback`() =
+    runTest {
+      val original =
+        SoftApConfigurationHidden.Builder(nativeConfiguration())
+          .setPassphrase(null, 0)
+          .build()
+      val (success, saved) = applyConfiguration(original) {
+        it.copy(isHidden = true)
+      }
+      assertTrue(success)
+      assertEquals(
+        SoftApConfigurationHidden.Builder(original).setHiddenSsid(true).build(),
+        saved,
+      )
+    }
+
+  @Test
+  fun `missing native configuration is rejected instead of using defaults`() =
+    runTest {
+      val wifi = mockk<IWifiManager>(relaxed = true)
+      val tethering = mockk<ITetheringConnector>(relaxed = true)
+      val store = SoftApStateStore()
+      val initial = nativeConfiguration().toBridgeClass(InternalState())
+      store.mConfig.value = initial
+      every { wifi.softApConfiguration } returns null
+      every { wifi.setSoftApConfiguration(any(), any()) } returns true
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        every { wifi.validateSoftApConfiguration(any()) } returns true
+      }
+      val controller = SoftApController(tethering, wifi, store, backgroundScope)
+      assertFalse(
+        controller.updateSoftApConfiguration(initial.copy(isHidden = true))
+      )
+      assertEquals(initial, store.config.value)
+      verify(exactly = 0) { wifi.setSoftApConfiguration(any(), any()) }
+      verify { tethering wasNot Called }
+    }
 }

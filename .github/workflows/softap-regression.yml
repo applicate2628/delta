@@ -30,6 +30,9 @@ jobs:
         run: ./gradlew --no-daemon :data:testDebugUnitTest --tests '*SoftApConfigurationPreservationTest'
       - name: All unit tests and debug APK
         run: ./gradlew --no-daemon test :app:assembleDebugKeySignedDebug
+      - name: Check Kotlin formatting
+        if: always()
+        run: ./gradlew --no-daemon :data:spotlessKotlinCheck
       - name: Test summary
         if: always()
         shell: bash
