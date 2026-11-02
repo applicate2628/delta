@@ -11,6 +11,7 @@ import dev.shadoe.delta.api.SoftApConfiguration
 import dev.shadoe.delta.api.SoftApSpeedType
 import dev.shadoe.delta.data.softap.internal.Extensions.toBridgeClass
 import dev.shadoe.delta.data.softap.internal.InternalState
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
