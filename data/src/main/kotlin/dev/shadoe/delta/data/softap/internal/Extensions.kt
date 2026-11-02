@@ -66,64 +66,87 @@ internal object Extensions {
       maxClientLimit = maxNumberOfClients,
     )
 
-  fun SoftApConfiguration.toOriginalClass() =
-    SoftApConfigurationHidden.Builder()
+  fun SoftApConfiguration.toOriginalClass(
+    original: SoftApConfigurationHidden
+  ): SoftApConfigurationHidden {
+    val current = original.toBridgeClass(InternalState())
+    val requestedPassphrase =
+      when (securityType) {
+        SoftApSecurityType.SECURITY_TYPE_OPEN,
+        SoftApSecurityType.SECURITY_TYPE_WPA3_OWE,
+        SoftApSecurityType.SECURITY_TYPE_WPA3_OWE_TRANSITION -> null
+        else -> passphrase
+      }
+
+    // Keep native options absent from Delta's model, including Wi-Fi 6/7.
+    return SoftApConfigurationHidden.Builder(original)
       .apply {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          setWifiSsid(ssid?.encodeToByteArray()?.let { WifiSsid.fromBytes(it) })
-        } else {
-          @Suppress("DEPRECATION") setSsid(ssid)
-        }
-
-        val passphrase =
-          if (securityType == SoftApSecurityType.SECURITY_TYPE_OPEN) {
-            null
+        if (ssid != current.ssid) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setWifiSsid(
+              ssid?.encodeToByteArray()?.let { WifiSsid.fromBytes(it) }
+            )
           } else {
-            passphrase
+            @Suppress("DEPRECATION") setSsid(ssid)
           }
-
-        setPassphrase(passphrase, @SuppressLint("WrongConstant") securityType)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        }
+        if (
+          securityType != current.securityType ||
+            requestedPassphrase != original.passphrase
+        ) {
+          setPassphrase(
+            requestedPassphrase,
+            @SuppressLint("WrongConstant") securityType,
+          )
+        }
+        if (
+          Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            macRandomizationSetting != current.macRandomizationSetting
+        ) {
           setMacRandomizationSetting(
             @SuppressLint("WrongConstant") macRandomizationSetting
           )
         }
-        setHiddenSsid(isHidden)
+        if (isHidden != current.isHidden) setHiddenSsid(isHidden)
 
-        val band2To5 = SoftApSpeedType.BAND_2GHZ or SoftApSpeedType.BAND_5GHZ
-        val band2To6 =
-          SoftApSpeedType.BAND_2GHZ or
-            SoftApSpeedType.BAND_5GHZ or
-            SoftApSpeedType.BAND_6GHZ
-        when (speedType) {
-          SoftApSpeedType.BAND_6GHZ -> {
-            setBand(@SuppressLint("WrongConstant") band2To6)
-          }
-          SoftApSpeedType.BAND_5GHZ -> {
-            setBand(@SuppressLint("WrongConstant") band2To5)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-              // FIXME: check isBridgedApConcurrencySupported() on wifimanager
-              setBands(intArrayOf(SoftApSpeedType.BAND_2GHZ, band2To5))
+        // The UI projects bands to one value. Reapplying that value would
+        // discard fixed channels and the original single/bridged topology.
+        if (speedType != current.speedType) {
+          val band2To5 = SoftApSpeedType.BAND_2GHZ or SoftApSpeedType.BAND_5GHZ
+          val band2To6 = band2To5 or SoftApSpeedType.BAND_6GHZ
+          when (speedType) {
+            SoftApSpeedType.BAND_6GHZ -> {
+              setBand(@SuppressLint("WrongConstant") band2To6)
             }
+            SoftApSpeedType.BAND_5GHZ -> {
+              setBand(@SuppressLint("WrongConstant") band2To5)
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // FIXME: check isBridgedApConcurrencySupported() on wifimanager
+                setBands(intArrayOf(SoftApSpeedType.BAND_2GHZ, band2To5))
+              }
+            }
+            SoftApSpeedType.BAND_2GHZ -> {
+              setBand(@SuppressLint("WrongConstant") SoftApSpeedType.BAND_2GHZ)
+            }
+            else -> {}
           }
-
-          SoftApSpeedType.BAND_2GHZ -> {
-            setBand(@SuppressLint("WrongConstant") SoftApSpeedType.BAND_2GHZ)
-          }
-
-          else -> {}
         }
-
-        setBlockedClientList(blockedDevices.map { it.toOriginalClass() })
-        setAllowedClientList(allowedClients.map { it.toOriginalClass() })
-        setClientControlByUserEnabled(false)
-        setAutoShutdownEnabled(isAutoShutdownEnabled)
-        setShutdownTimeoutMillis(autoShutdownTimeout)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-          setBridgedModeOpportunisticShutdownEnabled(isAutoShutdownEnabled)
+        if (blockedDevices != current.blockedDevices) {
+          setBlockedClientList(blockedDevices.map { it.toOriginalClass() })
         }
-        setMaxNumberOfClients(maxClientLimit)
+        if (allowedClients != current.allowedClients) {
+          setAllowedClientList(allowedClients.map { it.toOriginalClass() })
+        }
+        if (isAutoShutdownEnabled != current.isAutoShutdownEnabled) {
+          setAutoShutdownEnabled(isAutoShutdownEnabled)
+        }
+        if (autoShutdownTimeout != current.autoShutdownTimeout) {
+          setShutdownTimeoutMillis(autoShutdownTimeout)
+        }
+        if (maxClientLimit != current.maxClientLimit) {
+          setMaxNumberOfClients(maxClientLimit)
+        }
       }
       .build()
+  }
 }
