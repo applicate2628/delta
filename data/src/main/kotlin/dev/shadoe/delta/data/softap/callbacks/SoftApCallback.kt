@@ -95,6 +95,8 @@ internal class SoftApCallback(
                 querySupportedFrequencyBands(wifiManager)
               },
             supportedSecurityTypes = querySupportedSecurityTypes(capability),
+            ieee80211axSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+              capability.areFeaturesSupported(SoftApCapability.SOFTAP_FEATURE_IEEE80211_AX),
           )
         )
       }

@@ -97,7 +97,7 @@
     <string name="auto_shutdown_field_title">Автоматическое выключение</string>
     <string name="auto_shutdown_field_desc">Выключать точку доступа если в течение некоторого времени к ней не будет подключено ни одно устройство.</string>
     <string name="freq_band_field_icon">Значок типа скорости</string>
-    <string name="freq_band_field_label">Тип скорости</string>
+    <string name="freq_band_field_label">Диапазон частот</string>
     <string name="freq_band_2_4_GHz_desc">Поддерживается почти всеми устройствами, но работает не очень быстро.</string>
     <string name="freq_band_5_GHz_desc">Двухдиапазонный режим: Быстро работает на поддерживаемых устройствах + имеет совместимость со старыми устройствами.</string>
     <string name="freq_band_6_GHz_desc">Трехдиапазонный режим: Новейшая технология, доступная не во всех странах.</string>
@@ -208,4 +208,11 @@
     <string name="shizuku_setup_not_running">Не запущен.</string>
     <string name="shizuku_setup_not_connected">Не подключено.</string>
     <string name="shizuku_setup_connected">Подключено ✅</string>
+    <string name="wifi6_title">Wi-Fi 6 (802.11ax)</string>
+    <string name="wifi6_on">Включён в конфигурации точки доступа</string>
+    <string name="wifi6_off">Выключен в конфигурации точки доступа</string>
+    <string name="wifi6_unknown">Состояние ещё не прочитано</string>
+    <string name="wifi6_loading">Получаем возможности точки доступа…</string>
+    <string name="wifi6_unavailable">Эта версия Android или устройство не сообщает о поддержке управления.</string>
+    <string name="wifi6_description">Не зависит от диапазона 2,4/5 ГГц. Режим соединения зависит от клиента. Сохранение может перезапустить точку доступа.</string>
 </resources>

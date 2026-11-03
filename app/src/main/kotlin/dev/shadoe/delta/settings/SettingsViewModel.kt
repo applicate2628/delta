@@ -125,6 +125,12 @@ constructor(
       )
   }
 
+  fun updateWifi6(enabled: Boolean) {
+    if (config.value.ieee80211axEnabled == null ||
+      status.value.capabilities.ieee80211axSupported != true) return
+    _config.update { it.copy(ieee80211axEnabled = enabled) }
+  }
+
   fun updateIsHidden(isHidden: Boolean) {
     _config.value = _config.value.copy(isHidden = isHidden)
   }
@@ -193,7 +199,7 @@ constructor(
           PassphraseValidator.validate(preset.passphrase, preset.securityType),
       )
     }
-    _config.update {
+    _config.update { current ->
       preset.run {
         SoftApConfiguration(
           ssid = ssid,
@@ -207,6 +213,7 @@ constructor(
           isAutoShutdownEnabled = isAutoShutdownEnabled,
           autoShutdownTimeout = autoShutdownTimeout,
           maxClientLimit = maxClientLimit,
+          ieee80211axEnabled = current.ieee80211axEnabled,
         )
       }
     }
