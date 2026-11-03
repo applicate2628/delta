@@ -93,7 +93,10 @@ fun ShizukuSetupScreen(
           else -> {}
         }
       }
-      TextButton(onClick = onContinueWithoutShizuku, modifier = Modifier.fillMaxWidth()) {
+      TextButton(
+        onClick = onContinueWithoutShizuku,
+        modifier = Modifier.fillMaxWidth(),
+      ) {
         Text(stringResource(R.string.limited_continue))
       }
     }

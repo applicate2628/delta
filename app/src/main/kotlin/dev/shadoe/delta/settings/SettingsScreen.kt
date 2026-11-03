@@ -50,9 +50,9 @@ import dev.shadoe.delta.MainActivity
 import dev.shadoe.delta.R
 import dev.shadoe.delta.api.SoftApAutoShutdownTimeout
 import dev.shadoe.delta.api.SoftApSecurityType
-import dev.shadoe.delta.common.openHotspotSystemSettings
 import dev.shadoe.delta.common.components.FadeInExpanded
 import dev.shadoe.delta.common.components.FoldableWrapper
+import dev.shadoe.delta.common.openHotspotSystemSettings
 import dev.shadoe.delta.settings.components.AppRestartDialog
 import dev.shadoe.delta.settings.components.AutoShutDownTimeOutField
 import dev.shadoe.delta.settings.components.AutoShutdownField

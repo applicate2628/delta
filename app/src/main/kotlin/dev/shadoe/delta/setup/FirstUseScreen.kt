@@ -29,7 +29,10 @@ import dev.shadoe.delta.R
 import dev.shadoe.delta.common.shapes.PolygonShape
 
 @Composable
-fun FirstUseScreen(onStartSetup: () -> Unit, onContinueWithoutShizuku: () -> Unit) {
+fun FirstUseScreen(
+  onStartSetup: () -> Unit,
+  onContinueWithoutShizuku: () -> Unit,
+) {
   val roundedPillStar = remember {
     RoundedPolygon.pillStar(
       width = 1f,
@@ -88,7 +91,10 @@ fun FirstUseScreen(onStartSetup: () -> Unit, onContinueWithoutShizuku: () -> Uni
           )
         }
       }
-      TextButton(onClick = onContinueWithoutShizuku, modifier = Modifier.fillMaxWidth()) {
+      TextButton(
+        onClick = onContinueWithoutShizuku,
+        modifier = Modifier.fillMaxWidth(),
+      ) {
         Text(stringResource(R.string.limited_continue))
       }
       Text(

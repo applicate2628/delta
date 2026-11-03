@@ -7,8 +7,8 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -97,7 +97,9 @@ fun Nav(vm: NavViewModel = viewModel()) {
       composable<Routes.LimitedScreen> {
         LimitedModeScreen(
           vm = hiltViewModel<LimitedModeViewModel>(),
-          onSetupShizuku = { navController.navigate(Routes.Setup.ShizukuSetupScreen) },
+          onSetupShizuku = {
+            navController.navigate(Routes.Setup.ShizukuSetupScreen)
+          },
         )
       }
       composable<Routes.SoftApScreen> {

@@ -32,7 +32,8 @@ constructor(
   @SoftApBackgroundTasksScope scope: CoroutineScope,
 ) : AutoCloseable, TetheringEventListener {
   private val listenerJob = SupervisorJob(scope.coroutineContext[Job])
-  private val listenerScope = CoroutineScope(scope.coroutineContext + listenerJob)
+  private val listenerScope =
+    CoroutineScope(scope.coroutineContext + listenerJob)
   private val tetheringEventCallback = TetheringEventCallback(this)
 
   private val softApCallback = SoftApCallback(this, wifiManager)
@@ -58,7 +59,10 @@ constructor(
   override fun close() {
     listenerJob.cancel()
     runCatching {
-      tetheringConnector.unregisterTetheringEventCallback(tetheringEventCallback, ADB_PACKAGE_NAME)
+      tetheringConnector.unregisterTetheringEventCallback(
+        tetheringEventCallback,
+        ADB_PACKAGE_NAME,
+      )
     }
     runCatching {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -76,7 +80,9 @@ constructor(
 
   override fun onTetheredClientsChanged(clients: List<TetheredClient>) {
     softApStateStore.mStatus.update { it.copy(tetheredClients = clients) }
-    listenerScope.launch { macAddressCacheRepository.updateHostInfoInCache(clients) }
+    listenerScope.launch {
+      macAddressCacheRepository.updateHostInfoInCache(clients)
+    }
   }
 
   override fun onSoftApCapabilitiesChanged(capabilities: SoftApCapabilities) {

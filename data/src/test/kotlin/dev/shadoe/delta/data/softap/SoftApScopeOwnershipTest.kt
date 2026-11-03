@@ -19,24 +19,45 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], manifest = Config.NONE)
 class SoftApScopeOwnershipTest {
-  @Test fun `closing the monitor leaves shared scope alive for reconnection`() = runTest {
-    val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler))
-    try {
-      val monitor = SoftApMonitor(mockk<IWifiManager>(relaxed = true),
-        mockk<SoftApController>(relaxed = true), SoftApStateStore(), scope,
-        mockk<HotspotSnapshotRepository>(relaxed = true))
-      monitor.close()
-      assertTrue(scope.isActive)
-    } finally { scope.cancel() }
-  }
-  @Test fun `closing callbacks leaves shared scope alive for reconnection`() = runTest {
-    val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler))
-    try {
-      val listener = SoftApStateListener(mockk<ITetheringConnector>(relaxed = true),
-        mockk<IWifiManager>(relaxed = true), mockk<MacAddressCacheRepository>(relaxed = true),
-        SoftApStateStore(), scope)
-      listener.close()
-      assertTrue(scope.isActive)
-    } finally { scope.cancel() }
-  }
+  @Test
+  fun `closing the monitor leaves shared scope alive for reconnection`() =
+    runTest {
+      val scope =
+        CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler))
+      try {
+        val monitor =
+          SoftApMonitor(
+            mockk<IWifiManager>(relaxed = true),
+            mockk<SoftApController>(relaxed = true),
+            SoftApStateStore(),
+            scope,
+            mockk<HotspotSnapshotRepository>(relaxed = true),
+          )
+        monitor.close()
+        assertTrue(scope.isActive)
+      } finally {
+        scope.cancel()
+      }
+    }
+
+  @Test
+  fun `closing callbacks leaves shared scope alive for reconnection`() =
+    runTest {
+      val scope =
+        CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler))
+      try {
+        val listener =
+          SoftApStateListener(
+            mockk<ITetheringConnector>(relaxed = true),
+            mockk<IWifiManager>(relaxed = true),
+            mockk<MacAddressCacheRepository>(relaxed = true),
+            SoftApStateStore(),
+            scope,
+          )
+        listener.close()
+        assertTrue(scope.isActive)
+      } finally {
+        scope.cancel()
+      }
+    }
 }

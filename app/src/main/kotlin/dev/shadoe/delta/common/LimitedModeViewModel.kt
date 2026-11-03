@@ -6,6 +6,8 @@ import dev.shadoe.delta.data.softap.HotspotSnapshotRepository
 import javax.inject.Inject
 
 @HiltViewModel
-class LimitedModeViewModel @Inject constructor(snapshots: HotspotSnapshotRepository) : ViewModel() {
+class LimitedModeViewModel
+@Inject
+constructor(snapshots: HotspotSnapshotRepository) : ViewModel() {
   val snapshot = snapshots.snapshot
 }

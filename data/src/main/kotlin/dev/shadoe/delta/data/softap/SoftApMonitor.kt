@@ -41,19 +41,25 @@ constructor(
     flow {
         var previous: SoftApConfigurationHidden? = null
         while (true) {
-          val current = runCatching {
-            wifiManager.softApConfiguration?.let { Refine.unsafeCast<SoftApConfigurationHidden>(it) }
-          }.getOrNull()
+          val current =
+            runCatching {
+                wifiManager.softApConfiguration?.let {
+                  Refine.unsafeCast<SoftApConfigurationHidden>(it)
+                }
+              }
+              .getOrNull()
           if (current != null && current != previous) {
             emit(current)
             previous = current
           }
-          // Delay also on binder/read failure: never spin while Shizuku is unavailable.
+          // Delay also on binder/read failure: never spin while Shizuku is
+          // unavailable.
           delay(1.seconds)
         }
       }
       .onEach {
-        val config = it.toBridgeClass(state = softApStateStore.internalState.value)
+        val config =
+          it.toBridgeClass(state = softApStateStore.internalState.value)
         softApStateStore.mConfig.value = config
         snapshots.record(config)
       }
