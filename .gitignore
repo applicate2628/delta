@@ -10,3 +10,9 @@
 .cxx
 local.properties
 .kotlin
+
+# Private application signing material
+*.jks
+*.keystore
+*.p12
+/app/sign.json
