@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dev.shadoe.delta.api.ShizukuStates
 import dev.shadoe.delta.crash.CrashHandlerUtils
 import dev.shadoe.delta.data.FlagsRepository
 import dev.shadoe.delta.data.shizuku.ShizukuRepository
@@ -30,18 +29,15 @@ constructor(
 
   private suspend fun determineStartScreen(): Route {
     val isFirstRun = flagsRepository.isFirstRun()
-    val shizukuConnected =
-      shizukuRepository.shizukuState.value != ShizukuStates.CONNECTED
     val crashHandlerSetup =
       CrashHandlerUtils.shouldShowNotificationPermissionRequest(
         applicationContext
       )
-    return when {
-      isFirstRun -> Routes.Setup.FirstUseScreen
-      shizukuConnected -> Routes.Setup.ShizukuSetupScreen
-      crashHandlerSetup -> Routes.Setup.CrashHandlerSetupScreen
-      else -> Routes.SoftApScreen
-    }
+    return selectStartRoute(
+      firstRun = isFirstRun,
+      shizukuState = shizukuRepository.shizukuState.value,
+      needsNotificationPermission = crashHandlerSetup,
+    )
   }
 
   init {
