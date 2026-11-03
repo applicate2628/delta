@@ -180,7 +180,7 @@
     <string name="app_icon">Значок приложения</string>
     <string name="app_tagline">Настройки точки доступа разблокированы.</string>
     <string name="setup_start_button">Начать настройку »</string>
-    <string name="setup_note">Требуется Shizuku или Root-права.</string>
+    <string name="setup_note">Для расширенных функций нужен Shizuku или root. Настройки Android доступны и без них.</string>
     <!-- dev.shadoe.delta.setup.components.ShizukuConnected -->
     <string name="shizuku_connected_desc">Подключено к Shizuku, продолжите настройку!</string>
     <string name="setup_continue_button">Продолжить настройку</string>
@@ -215,4 +215,22 @@
     <string name="wifi6_loading">Получаем возможности точки доступа…</string>
     <string name="wifi6_unavailable">Эта версия Android или устройство не сообщает о поддержке управления.</string>
     <string name="wifi6_description">Не зависит от диапазона 2,4/5 ГГц. Режим соединения зависит от клиента. Сохранение может перезапустить точку доступа.</string>
+    <string name="limited_title">Ограниченный режим</string>
+    <string name="limited_description">Shizuku не подключён. Управляйте точкой доступа в настройках Android. Защищённые изменения через Delta требуют Shizuku; этот экран их не применяет.</string>
+    <string name="limited_open_settings">Открыть настройки точки доступа</string>
+    <string name="limited_settings_failed">Не удалось открыть настройки. Откройте раздел точки доступа в настройках Android вручную.</string>
+    <string name="limited_setup_shizuku">Подключить Shizuku</string>
+    <string name="limited_continue">Продолжить без Shizuku</string>
+    <string name="limited_snapshot_title">Последние прочитанные настройки</string>
+    <string name="limited_snapshot_warning">Это сохранённые данные, а не текущее состояние. Настройки могли измениться. Пароль и подключённые устройства здесь не сохраняются.</string>
+    <string name="limited_snapshot_empty">Настройки ещё не прочитаны. Подключите Shizuku, чтобы сохранить снимок.</string>
+    <string name="limited_snapshot_time">Снимок сохранён: %1$s</string>
+    <string name="limited_ssid">Имя сети: «%1$s»</string>
+    <string name="limited_hidden">Скрытое имя: %1$s</string>
+    <string name="limited_wifi6">Wi-Fi 6 (802.11ax): %1$s</string>
+    <string name="limited_security">Защита: %1$s</string>
+    <string name="limited_band">Диапазон частот: %1$s</string>
+    <string name="limited_yes">Да</string>
+    <string name="limited_no">Нет</string>
+    <string name="limited_unknown">Неизвестно</string>
 </resources>

@@ -187,7 +187,7 @@
     <string name="app_icon">App icon</string>
     <string name="app_tagline">Hotspot settings, unlocked.</string>
     <string name="setup_start_button">Start setup »</string>
-    <string name="setup_note">Requires Shizuku or root to function.</string>
+    <string name="setup_note">Advanced controls require Shizuku or root. Android settings remain available without them.</string>
     <!-- dev.shadoe.delta.setup.components.ShizukuConnected -->
     <string name="shizuku_connected_desc">Connected to Shizuku, continue with the setup!</string>
     <string name="setup_continue_button">Continue setup</string>
@@ -225,4 +225,22 @@
     <string name="wifi6_loading">Waiting for hotspot capabilities…</string>
     <string name="wifi6_unavailable">This Android version or device does not report control support.</string>
     <string name="wifi6_description">Independent of the 2.4/5 GHz band. Actual connection mode depends on the client. Saving may restart the hotspot.</string>
+    <string name="limited_title">Limited mode</string>
+    <string name="limited_description">Shizuku is not connected. Use Android settings to control your hotspot. Protected changes in Delta need Shizuku; this screen does not apply them.</string>
+    <string name="limited_open_settings">Open hotspot settings</string>
+    <string name="limited_settings_failed">Could not open settings. Open the hotspot section in Android settings manually.</string>
+    <string name="limited_setup_shizuku">Connect Shizuku</string>
+    <string name="limited_continue">Continue without Shizuku</string>
+    <string name="limited_snapshot_title">Last observed settings</string>
+    <string name="limited_snapshot_warning">These are saved observations, not live status. Settings may have changed. No password or connected devices are cached here.</string>
+    <string name="limited_snapshot_empty">No settings have been read yet. Connect Shizuku to record a snapshot.</string>
+    <string name="limited_snapshot_time">Snapshot recorded: %1$s</string>
+    <string name="limited_ssid">Network name: “%1$s”</string>
+    <string name="limited_hidden">Hidden name: %1$s</string>
+    <string name="limited_wifi6">Wi-Fi 6 (802.11ax): %1$s</string>
+    <string name="limited_security">Security: %1$s</string>
+    <string name="limited_band">Frequency band: %1$s</string>
+    <string name="limited_yes">Yes</string>
+    <string name="limited_no">No</string>
+    <string name="limited_unknown">Unknown</string>
 </resources>

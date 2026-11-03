@@ -14,7 +14,8 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -28,36 +29,33 @@ constructor(
   @WifiSystemService private val wifiManager: IWifiManager,
   private val softApController: SoftApController,
   private val softApStateStore: SoftApStateStore,
-  @SoftApBackgroundTasksScope private val scope: CoroutineScope,
+  @SoftApBackgroundTasksScope scope: CoroutineScope,
+  private val snapshots: HotspotSnapshotRepository,
 ) : AutoCloseable {
+  private val monitorJob = SupervisorJob(scope.coroutineContext[Job])
+  private val monitorScope = CoroutineScope(scope.coroutineContext + monitorJob)
+
   // TODO: replace this flow with lifecycle aware calls to
   //  [SoftApControlRepository.refresh()]
   private val updateConfigOnExternalChange =
     flow {
-        var prev =
-          Refine.unsafeCast<SoftApConfigurationHidden>(
-            wifiManager.softApConfiguration
-          )
-        emit(prev)
+        var previous: SoftApConfigurationHidden? = null
         while (true) {
-          runCatching {
-              Refine.unsafeCast<SoftApConfigurationHidden>(
-                wifiManager.softApConfiguration
-              )
-            }
-            .getOrNull()
-            ?.let { curr ->
-              if (prev != curr) {
-                emit(curr)
-                prev = curr
-              }
-              delay(1.seconds)
-            }
+          val current = runCatching {
+            wifiManager.softApConfiguration?.let { Refine.unsafeCast<SoftApConfigurationHidden>(it) }
+          }.getOrNull()
+          if (current != null && current != previous) {
+            emit(current)
+            previous = current
+          }
+          // Delay also on binder/read failure: never spin while Shizuku is unavailable.
+          delay(1.seconds)
         }
       }
       .onEach {
-        softApStateStore.mConfig.value =
-          it.toBridgeClass(state = softApStateStore.internalState.value)
+        val config = it.toBridgeClass(state = softApStateStore.internalState.value)
+        softApStateStore.mConfig.value = config
+        snapshots.record(config)
       }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -87,11 +85,11 @@ constructor(
         }
       )
     }
-    updateConfigOnExternalChange.launchIn(scope)
-    resetSoftApState().launchIn(scope)
+    updateConfigOnExternalChange.launchIn(monitorScope)
+    resetSoftApState().launchIn(monitorScope)
   }
 
   override fun close() {
-    scope.cancel("SoftApBackgroundJobs stopped gracefully.")
+    monitorJob.cancel()
   }
 }

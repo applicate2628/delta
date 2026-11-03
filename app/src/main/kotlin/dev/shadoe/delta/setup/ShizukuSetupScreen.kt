@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +40,7 @@ import dev.shadoe.delta.setup.components.ShizukuNotRunning
 @Composable
 fun ShizukuSetupScreen(
   onSetupFinished: () -> Unit,
+  onContinueWithoutShizuku: () -> Unit,
   vm: ShizukuSetupViewModel = viewModel(),
 ) {
   val state by vm.shizukuState.collectAsState()
@@ -90,7 +93,9 @@ fun ShizukuSetupScreen(
           else -> {}
         }
       }
+      TextButton(onClick = onContinueWithoutShizuku, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.limited_continue))
+      }
     }
-    Column(modifier = Modifier.padding(it)) {}
   }
 }

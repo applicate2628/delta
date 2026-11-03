@@ -8,7 +8,7 @@ internal fun selectStartRoute(
   needsNotificationPermission: Boolean,
 ): Route = when {
   firstRun -> Routes.Setup.FirstUseScreen
-  shizukuState != ShizukuStates.CONNECTED -> Routes.Setup.ShizukuSetupScreen
+  shizukuState != ShizukuStates.CONNECTED -> Routes.LimitedScreen
   needsNotificationPermission -> Routes.Setup.CrashHandlerSetupScreen
   else -> Routes.SoftApScreen
 }

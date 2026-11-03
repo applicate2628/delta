@@ -45,4 +45,11 @@ class HotspotSnapshotRepositoryTest {
     repository.record(config().copy(ieee80211axEnabled = null))
     assertNull(assertNotNull(HotspotSnapshotRepository(context).snapshot.value).wifi6)
   }
+
+  @Test fun `corrupt or incomplete cache is unknown not a fabricated configuration`() {
+    prefs.edit().putInt("version", 1).putLong("read_at", 1).commit()
+    assertNull(HotspotSnapshotRepository(context).snapshot.value)
+    prefs.edit().putString("version", "bad-type").commit()
+    assertNull(HotspotSnapshotRepository(context).snapshot.value)
+  }
 }

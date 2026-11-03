@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,7 +29,7 @@ import dev.shadoe.delta.R
 import dev.shadoe.delta.common.shapes.PolygonShape
 
 @Composable
-fun FirstUseScreen(onStartSetup: () -> Unit) {
+fun FirstUseScreen(onStartSetup: () -> Unit, onContinueWithoutShizuku: () -> Unit) {
   val roundedPillStar = remember {
     RoundedPolygon.pillStar(
       width = 1f,
@@ -86,6 +87,9 @@ fun FirstUseScreen(onStartSetup: () -> Unit) {
             fontWeight = FontWeight.SemiBold,
           )
         }
+      }
+      TextButton(onClick = onContinueWithoutShizuku, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.limited_continue))
       }
       Text(
         text = stringResource(R.string.setup_note),

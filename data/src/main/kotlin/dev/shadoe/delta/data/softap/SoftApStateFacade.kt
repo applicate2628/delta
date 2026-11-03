@@ -46,10 +46,8 @@ constructor(
   }
 
   private fun stopListening() {
-    runCatching {
-      softApStateListener?.close()
-      softApMonitor?.close()
-    }
+    runCatching { softApStateListener?.close() }
+    runCatching { softApMonitor?.close() }
     softApMonitor = null
     softApStateListener = null
   }

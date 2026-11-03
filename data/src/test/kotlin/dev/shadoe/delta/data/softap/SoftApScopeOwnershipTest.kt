@@ -23,7 +23,8 @@ class SoftApScopeOwnershipTest {
     val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler))
     try {
       val monitor = SoftApMonitor(mockk<IWifiManager>(relaxed = true),
-        mockk<SoftApController>(relaxed = true), SoftApStateStore(), scope)
+        mockk<SoftApController>(relaxed = true), SoftApStateStore(), scope,
+        mockk<HotspotSnapshotRepository>(relaxed = true))
       monitor.close()
       assertTrue(scope.isActive)
     } finally { scope.cancel() }

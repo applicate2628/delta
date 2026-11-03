@@ -17,7 +17,8 @@ import dev.shadoe.delta.data.softap.internal.TetheringEventListener
 import dev.shadoe.delta.data.softap.internal.Utils.ADB_PACKAGE_NAME
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,8 +29,10 @@ constructor(
   @WifiSystemService private val wifiManager: IWifiManager,
   private val macAddressCacheRepository: MacAddressCacheRepository,
   private val softApStateStore: SoftApStateStore,
-  @SoftApBackgroundTasksScope private val scope: CoroutineScope,
+  @SoftApBackgroundTasksScope scope: CoroutineScope,
 ) : AutoCloseable, TetheringEventListener {
+  private val listenerJob = SupervisorJob(scope.coroutineContext[Job])
+  private val listenerScope = CoroutineScope(scope.coroutineContext + listenerJob)
   private val tetheringEventCallback = TetheringEventCallback(this)
 
   private val softApCallback = SoftApCallback(this, wifiManager)
@@ -53,16 +56,17 @@ constructor(
   }
 
   override fun close() {
-    scope.cancel()
-    tetheringConnector.unregisterTetheringEventCallback(
-      tetheringEventCallback,
-      ADB_PACKAGE_NAME,
-    )
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      wifiManager.unregisterSoftApCallback(softApCallback)
-    } else {
-      @Suppress("DEPRECATION")
-      wifiManager.unregisterSoftApCallback(softApCallback.hashCode())
+    listenerJob.cancel()
+    runCatching {
+      tetheringConnector.unregisterTetheringEventCallback(tetheringEventCallback, ADB_PACKAGE_NAME)
+    }
+    runCatching {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        wifiManager.unregisterSoftApCallback(softApCallback)
+      } else {
+        @Suppress("DEPRECATION")
+        wifiManager.unregisterSoftApCallback(softApCallback.hashCode())
+      }
     }
   }
 
@@ -72,7 +76,7 @@ constructor(
 
   override fun onTetheredClientsChanged(clients: List<TetheredClient>) {
     softApStateStore.mStatus.update { it.copy(tetheredClients = clients) }
-    scope.launch { macAddressCacheRepository.updateHostInfoInCache(clients) }
+    listenerScope.launch { macAddressCacheRepository.updateHostInfoInCache(clients) }
   }
 
   override fun onSoftApCapabilitiesChanged(capabilities: SoftApCapabilities) {
