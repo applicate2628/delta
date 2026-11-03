@@ -33,6 +33,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - name: Check formatting
+        if: ${{ !inputs.baseline_only }}
+        run: ./gradlew --no-daemon spotlessCheck
       - name: Regression tests
         run: ./gradlew --no-daemon test
       - name: Build APK
@@ -71,9 +74,6 @@ jobs:
           fi
           "$tools/zipalign" -c -P 16 4 "$apk"
           sha256sum "$apk"
-      - name: Check formatting
-        if: ${{ !inputs.baseline_only }}
-        run: ./gradlew --no-daemon spotlessCheck
       - name: Upload APK
         if: ${{ !inputs.baseline_only && success() }}
         uses: actions/upload-artifact@v4

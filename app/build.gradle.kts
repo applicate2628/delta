@@ -58,7 +58,7 @@ configure<ApplicationExtension> {
       dimension = "default"
       signingConfig = signingConfigs.getByName("default")
     }
-    // Independent identity for the personal fork; sign locally after verification.
+    // Separate fork identity; signed locally with a permanent key.
     create("fork") {
       dimension = "default"
       applicationId = "io.github.applicate2628.delta"
