@@ -30,7 +30,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Regression tests
-        run: ./gradlew --no-daemon :data:testDebugUnitTest --tests '*SoftApConfigurationPreservationTest'
+        run: ./gradlew --no-daemon test
       - name: All unit tests and debug APK
         if: ${{ !inputs.baseline_only }}
         run: ./gradlew --no-daemon test :app:assembleDebugKeySignedDebug

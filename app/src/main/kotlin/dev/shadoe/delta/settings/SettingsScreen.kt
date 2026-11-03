@@ -52,6 +52,7 @@ import dev.shadoe.delta.api.SoftApAutoShutdownTimeout
 import dev.shadoe.delta.api.SoftApSecurityType
 import dev.shadoe.delta.common.components.FadeInExpanded
 import dev.shadoe.delta.common.components.FoldableWrapper
+import dev.shadoe.delta.common.openHotspotSystemSettings
 import dev.shadoe.delta.settings.components.AppRestartDialog
 import dev.shadoe.delta.settings.components.AutoShutDownTimeOutField
 import dev.shadoe.delta.settings.components.AutoShutdownField
@@ -71,18 +72,6 @@ import dev.shadoe.delta.settings.components.SsidField
 import dev.shadoe.delta.settings.components.TaskerIntegrationField
 import dev.shadoe.delta.settings.components.TaskerIntegrationInfo
 import dev.shadoe.delta.settings.components.Wifi6Field
-
-private fun openSystemSettings(context: Context, isBigScreen: Boolean = false) {
-  context.startActivity(
-    Intent("com.android.settings.WIFI_TETHER_SETTINGS").apply {
-      if (isBigScreen) {
-        addFlags(
-          Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or Intent.FLAG_ACTIVITY_NEW_TASK
-        )
-      }
-    }
-  )
-}
 
 private fun restartApp(context: Context) {
   context.startActivity(
@@ -238,7 +227,7 @@ fun SettingsScreen(
                   color = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
                 Button(
-                  onClick = { openSystemSettings(context, isBigScreen) },
+                  onClick = { openHotspotSystemSettings(context, isBigScreen) },
                   modifier = Modifier.padding(top = 8.dp),
                 ) {
                   Icon(
@@ -392,7 +381,7 @@ fun SettingsScreen(
       item {
         FadeInExpanded(isAdvancedSettingsEnabled) {
           OpenSystemSettingsField(
-            onOpenSettings = { openSystemSettings(context, isBigScreen) }
+            onOpenSettings = { openHotspotSystemSettings(context, isBigScreen) }
           )
         }
       }

@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -34,10 +35,17 @@ internal val LocalNavController =
 fun Nav(vm: NavViewModel = viewModel()) {
   val navController = rememberNavController()
   val startScreen by vm.startScreen.collectAsState()
+  val useLimitedMode: () -> Unit = {
+    vm.onSetupStarted()
+    navController.navigate(Routes.LimitedScreen) {
+      popUpTo(navController.graph.id)
+      launchSingleTop = true
+    }
+  }
   CompositionLocalProvider(LocalNavController provides navController) {
     NavHost(
       navController = navController,
-      startDestination = startScreen,
+      startDestination = Routes.BlankScreen,
       /** Played on the screen that's exiting from view due to back button */
       popExitTransition = {
         scaleOut(
@@ -69,7 +77,8 @@ fun Nav(vm: NavViewModel = viewModel()) {
           onStartSetup = {
             vm.onSetupStarted()
             navController.navigate(route = Routes.Setup.ShizukuSetupScreen)
-          }
+          },
+          onContinueWithoutShizuku = useLimitedMode,
         )
       }
       composable<Routes.Setup.ShizukuSetupScreen> {
@@ -79,10 +88,19 @@ fun Nav(vm: NavViewModel = viewModel()) {
             navController.navigate(Routes.Setup.CrashHandlerSetupScreen)
           },
           vm = vm,
+          onContinueWithoutShizuku = useLimitedMode,
         )
       }
       composable<Routes.Setup.CrashHandlerSetupScreen> {
         CrashHandlerSetupScreen(onSetupFinished = { vm.onSetupFinished() })
+      }
+      composable<Routes.LimitedScreen> {
+        LimitedModeScreen(
+          vm = hiltViewModel<LimitedModeViewModel>(),
+          onSetupShizuku = {
+            navController.navigate(Routes.Setup.ShizukuSetupScreen)
+          },
+        )
       }
       composable<Routes.SoftApScreen> {
         val vm = hiltViewModel<SoftApScreenViewModel>()
@@ -91,6 +109,14 @@ fun Nav(vm: NavViewModel = viewModel()) {
       composable<Routes.DebugScreen> {
         val vm = hiltViewModel<DebugViewModel>()
         DebugScreen(onNavigateUp = { navController.navigateUp() }, vm = vm)
+      }
+    }
+    LaunchedEffect(startScreen) {
+      if (startScreen != Routes.BlankScreen) {
+        navController.navigate(startScreen) {
+          popUpTo(navController.graph.id)
+          launchSingleTop = true
+        }
       }
     }
   }

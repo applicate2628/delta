@@ -18,6 +18,8 @@ object Routes {
 
   @Serializable object SoftApScreen : Route
 
+  @Serializable object LimitedScreen : Route
+
   @Serializable object BlocklistScreen : Route
 
   @Serializable object DebugScreen : Route

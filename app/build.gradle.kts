@@ -116,6 +116,9 @@ dependencies {
   implementation(libs.kotlinx.serialization.json)
 
   ksp(libs.hilt.compiler)
+  testImplementation(libs.kotlin.test.junit)
+  testImplementation(libs.mockk)
+  testImplementation(libs.roboelectric)
   androidTestImplementation(libs.kotlin.test.junit)
   androidTestImplementation(libs.mockk)
   androidTestImplementation(libs.kotlinx.coroutines.test)
