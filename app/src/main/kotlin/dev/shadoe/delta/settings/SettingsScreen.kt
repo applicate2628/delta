@@ -69,9 +69,9 @@ import dev.shadoe.delta.settings.components.PresetSheet
 import dev.shadoe.delta.settings.components.SecurityTypeField
 import dev.shadoe.delta.settings.components.SoftApTileField
 import dev.shadoe.delta.settings.components.SsidField
-import dev.shadoe.delta.settings.components.Wifi6Field
 import dev.shadoe.delta.settings.components.TaskerIntegrationField
 import dev.shadoe.delta.settings.components.TaskerIntegrationInfo
+import dev.shadoe.delta.settings.components.Wifi6Field
 
 private fun restartApp(context: Context) {
   context.startActivity(

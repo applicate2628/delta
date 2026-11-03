@@ -14,6 +14,9 @@ data class SoftApConfiguration(
   /** Timeout in milliseconds for auto shutdown. */
   val autoShutdownTimeout: Long,
   val maxClientLimit: Int,
-  /** Null means unavailable on this Android version, or preserve when applying a preset. */
+  /**
+   * Null means unavailable on this Android version, or preserve when applying a
+   * preset.
+   */
   val ieee80211axEnabled: Boolean? = null,
 )

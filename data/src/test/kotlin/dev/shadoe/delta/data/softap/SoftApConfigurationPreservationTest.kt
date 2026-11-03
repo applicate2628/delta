@@ -71,13 +71,19 @@ class SoftApConfigurationPreservationTest {
     val store = SoftApStateStore()
     val initial = original.toBridgeClass(InternalState("test-only-fallback"))
     store.mConfig.value = initial
-    store.mStatus.value = store.status.value.copy(
-      capabilities = store.status.value.capabilities.copy(ieee80211axSupported = wifi6Support)
-    )
-    every { wifi.softApConfiguration } answers {
-      if (accepted && readbackApplied && submitted.isCaptured) submitted.captured
-      else Refine.unsafeCast(original)
-    }
+    store.mStatus.value =
+      store.status.value.copy(
+        capabilities =
+          store.status.value.capabilities.copy(
+            ieee80211axSupported = wifi6Support
+          )
+      )
+    every { wifi.softApConfiguration } answers
+      {
+        if (accepted && readbackApplied && submitted.isCaptured)
+          submitted.captured
+        else Refine.unsafeCast(original)
+      }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
       every { wifi.validateSoftApConfiguration(any()) } returns valid
     }
@@ -239,66 +245,116 @@ class SoftApConfigurationPreservationTest {
 
   @Test
   @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
-  fun `read actual Wi-Fi 6 configuration independently of frequency band`() = runTest {
-    val original = nativeConfiguration()
-    assertEquals(true, original.toBridgeClass(InternalState()).ieee80211axEnabled)
-    val disabled = SoftApConfigurationHidden.Builder(original).setIeee80211axEnabled(false).build()
-    assertEquals(false, disabled.toBridgeClass(InternalState()).ieee80211axEnabled)
-  }
-
-  @Test
-  @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
-  fun `turn Wi-Fi 6 off without changing hidden security channels or Wi-Fi 7`() = runTest {
-    val original = SoftApConfigurationHidden.Builder(nativeConfiguration()).setHiddenSsid(true).build()
-    val (success, saved) = applyConfiguration(original) { it.copy(ieee80211axEnabled = false) }
-    assertTrue(success)
-    assertEquals(SoftApConfigurationHidden.Builder(original).setIeee80211axEnabled(false).build(), saved)
-  }
-
-  @Test
-  @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
-  fun `turn Wi-Fi 6 on only when hotspot capability confirms support`() = runTest {
-    val original = SoftApConfigurationHidden.Builder(nativeConfiguration()).setIeee80211axEnabled(false).build()
-    val (success, saved) = applyConfiguration(original) { it.copy(ieee80211axEnabled = true) }
-    assertTrue(success)
-    assertEquals(SoftApConfigurationHidden.Builder(original).setIeee80211axEnabled(true).build(), saved)
-  }
-
-  @Test
-  @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
-  fun `unsupported or unknown Wi-Fi 6 enable never reaches system setter`() = runTest {
-    val original = SoftApConfigurationHidden.Builder(nativeConfiguration()).setIeee80211axEnabled(false).build()
-    for (support in listOf(false, null)) {
-      val (success, saved) = applyConfiguration(original, wifi6Support = support) { it.copy(ieee80211axEnabled = true) }
-      assertFalse(success)
-      assertEquals(null, saved)
+  fun `read actual Wi-Fi 6 configuration independently of frequency band`() =
+    runTest {
+      val original = nativeConfiguration()
+      assertEquals(
+        true,
+        original.toBridgeClass(InternalState()).ieee80211axEnabled,
+      )
+      val disabled =
+        SoftApConfigurationHidden.Builder(original)
+          .setIeee80211axEnabled(false)
+          .build()
+      assertEquals(
+        false,
+        disabled.toBridgeClass(InternalState()).ieee80211axEnabled,
+      )
     }
-  }
+
+  @Test
+  @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
+  fun `turn Wi-Fi 6 off without changing hidden security channels or Wi-Fi 7`() =
+    runTest {
+      val original =
+        SoftApConfigurationHidden.Builder(nativeConfiguration())
+          .setHiddenSsid(true)
+          .build()
+      val (success, saved) =
+        applyConfiguration(original) { it.copy(ieee80211axEnabled = false) }
+      assertTrue(success)
+      assertEquals(
+        SoftApConfigurationHidden.Builder(original)
+          .setIeee80211axEnabled(false)
+          .build(),
+        saved,
+      )
+    }
+
+  @Test
+  @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
+  fun `turn Wi-Fi 6 on only when hotspot capability confirms support`() =
+    runTest {
+      val original =
+        SoftApConfigurationHidden.Builder(nativeConfiguration())
+          .setIeee80211axEnabled(false)
+          .build()
+      val (success, saved) =
+        applyConfiguration(original) { it.copy(ieee80211axEnabled = true) }
+      assertTrue(success)
+      assertEquals(
+        SoftApConfigurationHidden.Builder(original)
+          .setIeee80211axEnabled(true)
+          .build(),
+        saved,
+      )
+    }
+
+  @Test
+  @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
+  fun `unsupported or unknown Wi-Fi 6 enable never reaches system setter`() =
+    runTest {
+      val original =
+        SoftApConfigurationHidden.Builder(nativeConfiguration())
+          .setIeee80211axEnabled(false)
+          .build()
+      for (support in listOf(false, null)) {
+        val (success, saved) =
+          applyConfiguration(original, wifi6Support = support) {
+            it.copy(ieee80211axEnabled = true)
+          }
+        assertFalse(success)
+        assertEquals(null, saved)
+      }
+    }
 
   @Test
   @Config(sdk = [31, 33, 35, 36], manifest = Config.NONE)
   fun `rejected radio readback is not reported as success`() = runTest {
-    val (success, _) = applyConfiguration(nativeConfiguration(), readbackApplied = false) {
-      it.copy(ieee80211axEnabled = false)
-    }
+    val (success, _) =
+      applyConfiguration(nativeConfiguration(), readbackApplied = false) {
+        it.copy(ieee80211axEnabled = false)
+      }
     assertFalse(success)
   }
 
   @Test
-  fun `null radio preference from old presets preserves native radio options`() = runTest {
-    val original = nativeConfiguration()
-    val (success, saved) = applyConfiguration(original) { it.copy(isHidden = true, ieee80211axEnabled = null) }
-    assertTrue(success)
-    assertEquals(SoftApConfigurationHidden.Builder(original).setHiddenSsid(true).build(), saved)
-  }
+  fun `null radio preference from old presets preserves native radio options`() =
+    runTest {
+      val original = nativeConfiguration()
+      val (success, saved) =
+        applyConfiguration(original) {
+          it.copy(isHidden = true, ieee80211axEnabled = null)
+        }
+      assertTrue(success)
+      assertEquals(
+        SoftApConfigurationHidden.Builder(original).setHiddenSsid(true).build(),
+        saved,
+      )
+    }
 
   @Test
   @Config(sdk = [30], manifest = Config.NONE)
-  fun `API 30 reports unknown radio flag and rejects explicit edits`() = runTest {
-    val original = nativeConfiguration()
-    assertEquals(null, original.toBridgeClass(InternalState()).ieee80211axEnabled)
-    val (success, saved) = applyConfiguration(original) { it.copy(ieee80211axEnabled = false) }
-    assertFalse(success)
-    assertEquals(null, saved)
-  }
+  fun `API 30 reports unknown radio flag and rejects explicit edits`() =
+    runTest {
+      val original = nativeConfiguration()
+      assertEquals(
+        null,
+        original.toBridgeClass(InternalState()).ieee80211axEnabled,
+      )
+      val (success, saved) =
+        applyConfiguration(original) { it.copy(ieee80211axEnabled = false) }
+      assertFalse(success)
+      assertEquals(null, saved)
+    }
 }

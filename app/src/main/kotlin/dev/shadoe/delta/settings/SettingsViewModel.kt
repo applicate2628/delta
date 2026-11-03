@@ -126,8 +126,11 @@ constructor(
   }
 
   fun updateWifi6(enabled: Boolean) {
-    if (config.value.ieee80211axEnabled == null ||
-      status.value.capabilities.ieee80211axSupported != true) return
+    if (
+      config.value.ieee80211axEnabled == null ||
+        status.value.capabilities.ieee80211axSupported != true
+    )
+      return
     _config.update { it.copy(ieee80211axEnabled = enabled) }
   }
 
