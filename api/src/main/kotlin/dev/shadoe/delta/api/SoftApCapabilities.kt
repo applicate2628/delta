@@ -9,4 +9,6 @@ data class SoftApCapabilities(
   val isMacAddressCustomizationSupported: Boolean,
   @BandType val supportedFrequencyBands: List<Int>,
   @SecurityType val supportedSecurityTypes: List<Int>,
+  /** Null until the system reports hotspot capabilities. */
+  val ieee80211axSupported: Boolean? = null,
 )
