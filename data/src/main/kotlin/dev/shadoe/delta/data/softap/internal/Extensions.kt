@@ -113,8 +113,7 @@ internal object Extensions {
         }
         if (isHidden != current.isHidden) setHiddenSsid(isHidden)
         if (
-          requestedWifi6 != null &&
-            requestedWifi6 != current.ieee80211axEnabled
+          requestedWifi6 != null && requestedWifi6 != current.ieee80211axEnabled
         ) {
           check(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             "Wi-Fi 6 configuration requires Android 12 or later"
