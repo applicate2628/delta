@@ -70,6 +70,7 @@ import dev.shadoe.delta.settings.components.SoftApTileField
 import dev.shadoe.delta.settings.components.SsidField
 import dev.shadoe.delta.settings.components.TaskerIntegrationField
 import dev.shadoe.delta.settings.components.TaskerIntegrationInfo
+import dev.shadoe.delta.settings.components.Wifi6Field
 
 private fun openSystemSettings(context: Context, isBigScreen: Boolean = false) {
   context.startActivity(
@@ -294,6 +295,13 @@ fun SettingsScreen(
           frequencyBand = config.speedType,
           supportedBands = status.capabilities.supportedFrequencyBands,
           onBandChange = { vm.updateSpeedType(it) },
+        )
+      }
+      item {
+        Wifi6Field(
+          enabled = config.ieee80211axEnabled,
+          supported = status.capabilities.ieee80211axSupported,
+          onChange = vm::updateWifi6,
         )
       }
       item {

@@ -2,6 +2,11 @@ name: SoftAP regression
 
 on:
   workflow_dispatch:
+    inputs:
+      baseline_only:
+        description: Run regression tests without packaging
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,18 +29,16 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - name: Check Kotlin formatting
-        run: |
-          if ! ./gradlew --no-daemon :data:spotlessKotlinCheck; then
-            ./gradlew --no-daemon :data:spotlessKotlinApply
-            git diff -- data/src
-            exit 1
-          fi
       - name: Regression tests
         run: ./gradlew --no-daemon :data:testDebugUnitTest --tests '*SoftApConfigurationPreservationTest'
       - name: All unit tests and debug APK
+        if: ${{ !inputs.baseline_only }}
         run: ./gradlew --no-daemon test :app:assembleDebugKeySignedDebug
+      - name: Check formatting
+        if: ${{ !inputs.baseline_only }}
+        run: ./gradlew --no-daemon spotlessCheck
       - name: Upload debug APK
+        if: ${{ !inputs.baseline_only && success() }}
         uses: actions/upload-artifact@v4
         with:
           name: delta-preserve-wifi6-debug-${{ github.sha }}
@@ -56,3 +59,17 @@ jobs:
                   for failure in case.findall('failure'):
                       print(case.get('name'), (failure.get('message') or '')[:800])
           PY
+      - name: Formatting patch on failure
+        if: ${{ failure() && !inputs.baseline_only }}
+        run: |
+          ./gradlew --no-daemon spotlessApply
+          git diff > formatting.patch
+      - name: Upload verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-${{ github.sha }}
+          path: |
+            **/build/test-results/**/*.xml
+            formatting.patch
+          retention-days: 7

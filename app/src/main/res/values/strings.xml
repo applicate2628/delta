@@ -100,7 +100,7 @@
     <string name="auto_shutdown_field_title">Auto shutdown</string>
     <string name="auto_shutdown_field_desc">Turns off hotspot when no devices are connected for some time.</string>
     <string name="freq_band_field_icon">Frequency band icon</string>
-    <string name="freq_band_field_label">Speed Type</string>
+    <string name="freq_band_field_label">Frequency band</string>
     <string name="freq_band_2_4_GHz" translatable="false">2.4 GHz</string>
     <string name="freq_band_2_4_GHz_desc">Supported by almost all devices but not very fast.</string>
     <string name="freq_band_5_GHz" translatable="false">5 GHz</string>
@@ -218,4 +218,11 @@
     <string name="preset_applied">Preset applied.</string>
     <string name="preset_confirm_title">Apply %s</string>
     <string name="preset_confirm_body">Are you sure you want to apply this preset? Hotspot will be restarted if running.</string>
+    <string name="wifi6_title">Wi-Fi 6 (802.11ax)</string>
+    <string name="wifi6_on">Enabled in hotspot configuration</string>
+    <string name="wifi6_off">Disabled in hotspot configuration</string>
+    <string name="wifi6_unknown">State has not been read</string>
+    <string name="wifi6_loading">Waiting for hotspot capabilities…</string>
+    <string name="wifi6_unavailable">This Android version or device does not report control support.</string>
+    <string name="wifi6_description">Independent of the 2.4/5 GHz band. Actual connection mode depends on the client. Saving may restart the hotspot.</string>
 </resources>

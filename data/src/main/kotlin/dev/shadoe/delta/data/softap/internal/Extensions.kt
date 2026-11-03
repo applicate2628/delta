@@ -64,12 +64,16 @@ internal object Extensions {
       isAutoShutdownEnabled = isAutoShutdownEnabled,
       autoShutdownTimeout = shutdownTimeoutMillis,
       maxClientLimit = maxNumberOfClients,
+      ieee80211axEnabled =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) isIeee80211axEnabled
+        else null,
     )
 
   fun SoftApConfiguration.toOriginalClass(
     original: SoftApConfigurationHidden
   ): SoftApConfigurationHidden {
     val current = original.toBridgeClass(InternalState())
+    val requestedWifi6 = ieee80211axEnabled
     val requestedPassphrase =
       when (securityType) {
         SoftApSecurityType.SECURITY_TYPE_OPEN,
@@ -108,6 +112,14 @@ internal object Extensions {
           )
         }
         if (isHidden != current.isHidden) setHiddenSsid(isHidden)
+        if (
+          requestedWifi6 != null && requestedWifi6 != current.ieee80211axEnabled
+        ) {
+          check(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            "Wi-Fi 6 configuration requires Android 12 or later"
+          }
+          setIeee80211axEnabled(requestedWifi6)
+        }
 
         // The UI projects bands to one value. Reapplying that value would
         // discard fixed channels and the original single/bridged topology.
