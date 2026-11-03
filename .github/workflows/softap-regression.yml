@@ -7,6 +7,10 @@ on:
         description: Run regression tests without packaging
         type: boolean
         default: false
+      release:
+        description: Build the unsigned personal release instead of the debug APK
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,20 +33,53 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - name: Regression tests
-        run: ./gradlew --no-daemon test
-      - name: All unit tests and debug APK
-        if: ${{ !inputs.baseline_only }}
-        run: ./gradlew --no-daemon test :app:assembleDebugKeySignedDebug
       - name: Check formatting
         if: ${{ !inputs.baseline_only }}
         run: ./gradlew --no-daemon spotlessCheck
-      - name: Upload debug APK
+      - name: Regression tests
+        run: ./gradlew --no-daemon test
+      - name: Build APK
+        if: ${{ !inputs.baseline_only }}
+        env:
+          BUILD_RELEASE: ${{ inputs.release }}
+        run: |
+          if [ "$BUILD_RELEASE" = "true" ]; then
+            ./gradlew --no-daemon :app:assembleForkRelease
+          else
+            ./gradlew --no-daemon :app:assembleDebugKeySignedDebug
+          fi
+      - name: Verify release identity and absence of debug tools
+        if: ${{ !inputs.baseline_only && inputs.release }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/fork/release/app-fork-release-unsigned.apk
+          tools=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$tools/aapt2" dump badging "$apk" > "$RUNNER_TEMP/delta-badging.txt"
+          "$tools/aapt2" dump xmltree "$apk" --file AndroidManifest.xml > "$RUNNER_TEMP/delta-manifest.txt"
+          grep -F "package: name='io.github.applicate2628.delta' versionCode='100' versionName='2026.11.03.1'" "$RUNNER_TEMP/delta-badging.txt"
+          grep -F "application-label:'Delta'" "$RUNNER_TEMP/delta-badging.txt"
+          if grep -q 'application-debuggable' "$RUNNER_TEMP/delta-badging.txt"; then
+            echo 'Unexpected debuggable release'; exit 1
+          fi
+          if grep -Eiq 'leakcanary|LeakActivity|DisplayLeak' "$RUNNER_TEMP/delta-manifest.txt"; then
+            echo 'Unexpected leak-analysis launcher'; exit 1
+          fi
+          ./gradlew --no-daemon :app:dependencies --configuration forkReleaseRuntimeClasspath > "$RUNNER_TEMP/delta-runtime-deps.txt"
+          if grep -Eiq 'com.squareup.leakcanary|com.squareup.shark' "$RUNNER_TEMP/delta-runtime-deps.txt"; then
+            echo 'Unexpected leak-analysis dependency'; exit 1
+          fi
+          if "$tools/apksigner" verify "$apk" > "$RUNNER_TEMP/delta-signature.txt" 2>&1; then
+            echo 'Unexpected signature: local permanent signing is required'; exit 1
+          fi
+          "$tools/zipalign" -c -P 16 4 "$apk"
+          sha256sum "$apk"
+      - name: Upload APK
         if: ${{ !inputs.baseline_only && success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: delta-preserve-wifi6-debug-${{ github.sha }}
-          path: app/build/outputs/apk/**/*.apk
+          name: delta-${{ inputs.release && 'release-unsigned' || 'debug' }}-${{ github.sha }}
+          path: ${{ inputs.release && 'app/build/outputs/apk/fork/release/*-unsigned.apk' || 'app/build/outputs/apk/debugKeySigned/debug/*.apk' }}
           if-no-files-found: error
           retention-days: 7
       - name: Test summary

@@ -58,6 +58,13 @@ configure<ApplicationExtension> {
       dimension = "default"
       signingConfig = signingConfigs.getByName("default")
     }
+    // Separate fork identity; signed locally with a permanent key.
+    create("fork") {
+      dimension = "default"
+      applicationId = "io.github.applicate2628.delta"
+      versionCode = 100
+      versionName = "2026.11.03.1"
+    }
   }
 
   buildTypes {
