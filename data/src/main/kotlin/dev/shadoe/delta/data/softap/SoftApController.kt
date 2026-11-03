@@ -44,22 +44,31 @@ constructor(
       override fun onResult(resultCode: Int) {}
     }
 
-  private fun setSoftApConfiguration(c: SoftApConfiguration): Boolean {
-    val original =
+  private fun setSoftApConfiguration(c: SoftApConfiguration): SoftApConfiguration? {
+    val original = Refine.unsafeCast<SoftApConfigurationHidden>(
       checkNotNull(wifiManager.softApConfiguration) {
         "Current hotspot configuration is unavailable"
       }
-    val updated =
-      Refine.unsafeCast<android.net.wifi.SoftApConfiguration>(
-        c.toOriginalClass(Refine.unsafeCast(original))
-      )
-    if (
-      Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-        !wifiManager.validateSoftApConfiguration(updated)
-    ) {
-      return false
+    )
+    val radioChanged = c.ieee80211axEnabled != null &&
+      (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+        c.ieee80211axEnabled != original.isIeee80211axEnabled)
+    if (radioChanged &&
+      (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+        (c.ieee80211axEnabled == true &&
+          softApStateStore.status.value.capabilities.ieee80211axSupported != true))) {
+      return null
     }
-    return wifiManager.setSoftApConfiguration(updated, ADB_PACKAGE_NAME)
+    val updated = Refine.unsafeCast<android.net.wifi.SoftApConfiguration>(
+      c.toOriginalClass(original)
+    )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+      !wifiManager.validateSoftApConfiguration(updated)) return null
+    if (!wifiManager.setSoftApConfiguration(updated, ADB_PACKAGE_NAME)) return null
+    val saved = wifiManager.softApConfiguration ?: return null
+    val actual = Refine.unsafeCast<SoftApConfigurationHidden>(saved)
+    if (radioChanged && actual.isIeee80211axEnabled != c.ieee80211axEnabled) return null
+    return actual.toBridgeClass(state = softApStateStore.internalState.value)
   }
 
   // TODO: remove this workaround during rewrite
@@ -129,30 +138,25 @@ constructor(
     return true
   }
 
-  fun updateSoftApConfiguration(c: SoftApConfiguration): Boolean =
-    runCatching { setSoftApConfiguration(c) }
+  fun updateSoftApConfiguration(c: SoftApConfiguration): Boolean {
+    val saved = runCatching { setSoftApConfiguration(c) }
       .onFailure { Log.e(TAG, it.stackTraceToString()) }
-      .getOrDefault(false)
-      .also {
-        if (it) {
-          softApStateStore.mConfig.update { c }
-          scope.launch {
-            val enabled = SoftApEnabledState.WIFI_AP_STATE_ENABLED
-            val disabled = SoftApEnabledState.WIFI_AP_STATE_DISABLED
-            val status = softApStateStore.mStatus
-            if (status.value.enabledState == enabled) {
-              stopSoftAp()
-              while (status.value.enabledState != disabled) {
-                delay(500.milliseconds)
-              }
-              startSoftAp()
-              while (status.value.enabledState != enabled) {
-                delay(500.milliseconds)
-              }
-            }
-          }
-        }
+      .getOrNull() ?: return false
+    // Publish readback rather than an optimistic UI copy (including null preset flags).
+    softApStateStore.mConfig.update { saved }
+    scope.launch {
+      val enabled = SoftApEnabledState.WIFI_AP_STATE_ENABLED
+      val disabled = SoftApEnabledState.WIFI_AP_STATE_DISABLED
+      val status = softApStateStore.mStatus
+      if (status.value.enabledState == enabled) {
+        stopSoftAp()
+        while (status.value.enabledState != disabled) delay(500.milliseconds)
+        startSoftAp()
+        while (status.value.enabledState != enabled) delay(500.milliseconds)
       }
+    }
+    return true
+  }
 
   fun refreshConfiguration() {
     softApStateStore.mConfig.update {
